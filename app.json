@@ -5,19 +5,12 @@
     "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
-    "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/logo.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
+    "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true,
-      "newArchEnabled": true
+      "supportsTablet": true
     },
     "android": {
       "package": "com.mercado.app",
-      "newArchEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#ffffff"
@@ -28,7 +21,9 @@
     },
     "plugins": [
       "expo-status-bar",
-      "expo-font"
+      "expo-font",
+      "expo-sqlite",
+      "expo-localization"
     ]
   }
 }

@@ -1,166 +1,96 @@
-import React from 'react';
-import { TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
-import { FontAwesome } from '@expo/vector-icons';
-import { auth } from '../config/firebase'; 
-import { useTheme } from '../context/ThemeContext'; // Importa o hook de tema
+import { FontAwesome5 } from '@expo/vector-icons'; 
+import { useTheme } from '../context/ThemeContext';
+import { initDB } from '../config/database'; // <-- IMPORTAÇÃO DO BANCO
 
 import CustomDrawerContent from './CustomDrawerContent'; 
 
-import LoginScreen from '../screens/Auth/LoginScreen'; 
-import RegisterScreen from '../screens/Auth/RegisterScreen'; 
-import AdminScreen from '../screens/Admin/AdminScreen'; 
-import HomeScreen from "../screens/HomeScreen";
-import UserManagementScreen from '../screens/Admin/UserManagementScreen'; 
-import ProductManagementScreen from '../screens/Admin/ProductManagementScreen';
-import AdminOrderManagementScreen from "../screens/Admin/AdminOrderManagementScreen";
-import AdminReportsScreen from "../screens/Admin/AdminReportsScreen"; 
-import ProfileScreen from '../screens/Profile/ProfileScreen';
-import EmployeeScreen from "../screens/Employee/EmployeeScreen";
-import CheckoutScreen from "../screens/Client/CheckoutScreen";
-import OrderHistoryScreen from "../screens/Client/OrderHistoryScreen";
-import ClientProfileScreen from "../screens/Client/ClientProfileScreen";
-import ClientAddressScreen from "../screens/Client/ClientAddressScreen";
+// Telas do Aplicativo
+import WelcomeScreen from '../screens/WelcomeScreen';
+import HomeScreen from '../screens/HomeScreen'; 
+import ProdutosScreen from '../screens/ProdutosScreen';
+import CadastroProdutoScreen from '../screens/CadastroProdutoScreen';
+import FornecedoresScreen from '../screens/FornecedoresScreen';
+import MovimentacoesScreen from '../screens/MovimentacoesScreen';
+import RelatoriosScreen from '../screens/RelatoriosScreen';
 
 const Stack = createNativeStackNavigator(); 
 const Drawer = createDrawerNavigator(); 
-const Tab = createBottomTabNavigator();
 
-function ClientTabNavigator() {
-  const { themeColors } = useTheme();
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size }) => {
-          let iconName;
-          if (route.name === 'Historico') iconName = 'list-alt';
-          else if (route.name === 'MeusDados') iconName = 'user';
-          else if (route.name === 'Enderecos') iconName = 'map-marker';
-          return <FontAwesome name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: themeColors.primary,
-        tabBarInactiveTintColor: themeColors.textSecondary,
-        headerShown: false, 
-        tabBarStyle: { 
-          height: 60, 
-          paddingBottom: 10, 
-          paddingTop: 5, 
-          backgroundColor: themeColors.card,
-          borderTopColor: themeColors.border 
-        }
-      })}
-    >
-      <Tab.Screen name="Historico" component={OrderHistoryScreen} options={{ title: 'Histórico' }} />
-      <Tab.Screen name="MeusDados" component={ClientProfileScreen} options={{ title: 'Meus Dados' }} />
-      <Tab.Screen name="Enderecos" component={ClientAddressScreen} options={{ title: 'Endereços' }} />
-    </Tab.Navigator>
-  );
-}
-
-function AdminTabNavigator() {
-  const { themeColors } = useTheme();
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size }) => {
-          let iconName;
-          if (route.name === 'Resumo') iconName = 'bar-chart';
-          else if (route.name === 'Produtos') iconName = 'plus-circle';
-          else if (route.name === 'Encomendas') iconName = 'list-alt';
-          else if (route.name === 'Relatorios') iconName = 'pie-chart';
-          return <FontAwesome name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#10B981', 
-        tabBarInactiveTintColor: themeColors.textSecondary,
-        headerShown: false, 
-        tabBarStyle: { 
-          height: 60, 
-          paddingBottom: 10, 
-          paddingTop: 5, 
-          backgroundColor: themeColors.card,
-          borderTopColor: themeColors.border 
-        }
-      })}
-    >
-      <Tab.Screen name="Resumo" component={AdminScreen} options={{ title: 'Resumo' }} />
-      <Tab.Screen name="Encomendas" component={AdminOrderManagementScreen} options={{ title: 'Encomendas' }} />
-      <Tab.Screen name="Relatorios" component={AdminReportsScreen} options={{ title: 'Relatórios' }} />
-      <Tab.Screen name="Produtos" component={ProductManagementScreen} options={{ title: 'Produtos' }} />
-    </Tab.Navigator>
-  );
-}
-
-function DrawerNavigator({ route, navigation }) {
-  const userRole = route.params?.userRole || 'client'; 
-  const isGuest = !auth.currentUser; 
-  const { themeColors } = useTheme(); // Obtém as cores do tema atual
-
-  const getInitialRoute = () => {
-    if (userRole === "admin") return "AdminArea";
-    if (userRole === "funcionario") return "EmployeeArea";
-    return "ClientArea";
-  };
+// ... (Mantenha sua function DrawerNavigator() exatamente como está) ...
+function DrawerNavigator() {
+  const { themeColors } = useTheme(); 
 
   return (
     <Drawer.Navigator
-      initialRouteName={getInitialRoute()} 
       drawerContent={(props) => <CustomDrawerContent {...props} />}  
       screenOptions={{
         headerStyle: { backgroundColor: themeColors.headerBg }, 
         headerTintColor: themeColors.headerText, 
         drawerActiveTintColor: themeColors.primary,
-        drawerInactiveTintColor: themeColors.textPrimary, // Mantém o texto visível no modo escuro/claro
-        drawerStyle: { backgroundColor: themeColors.background }, // Fundo da gaveta sincronizado
+        drawerInactiveTintColor: themeColors.textPrimary, 
+        drawerStyle: { backgroundColor: themeColors.background }, 
         sceneContainerStyle: { backgroundColor: themeColors.background },
-        swipeEnabled: !isGuest, 
-        headerLeft: isGuest ? () => (
-          <TouchableOpacity onPress={() => navigation.navigate('Login')} style={{ marginLeft: 15 }}>
-             <FontAwesome name="sign-in" size={24} color={themeColors.headerText} />
-          </TouchableOpacity>
-        ) : undefined, 
       }}
     >
-      {(userRole === 'client' || isGuest) && (
-        <>
-          <Drawer.Screen 
-            name="ClientArea" 
-            component={HomeScreen} 
-            options={{ title: isGuest ? '🛒 Loja (Visitante)' : '🛒 Loja' }} 
-          />
-          {!isGuest && (
-            <Drawer.Screen name="ClientPanel" component={ClientTabNavigator} options={{ title: '👤 Meu Painel' }} />
-          )}
-        </>
-      )}
-
-      {userRole === 'funcionario' && (
-        <Drawer.Group>
-          <Drawer.Screen name="EmployeeArea" component={EmployeeScreen} options={{ title: "🛵 Minhas Entregas" }} />
-        </Drawer.Group>
-      )}
-
-      {userRole === 'admin' && (
-        <Drawer.Group>
-          <Drawer.Screen name="AdminArea" component={AdminTabNavigator} options={{ title: '⚙️ Painel Administrador' }} />
-          <Drawer.Screen name="UserManagement" component={UserManagementScreen} options={{ title: '👥 Gestão de Usuários' }} />
-        </Drawer.Group>
-      )}
+      <Drawer.Screen name="Painel" component={HomeScreen} options={{ title: 'Início', drawerIcon: ({ color, size }) => <FontAwesome5 name="home" size={size} color={color} /> }} />
+      <Drawer.Screen name="Produtos" component={ProdutosScreen} options={{ title: 'Produtos', drawerIcon: ({ color, size }) => <FontAwesome5 name="box-open" size={size} color={color} /> }} />
+      <Drawer.Screen name="Fornecedores" component={FornecedoresScreen} options={{ title: 'Fornecedores', drawerIcon: ({ color, size }) => <FontAwesome5 name="truck" size={size} color={color} /> }} />
+      <Drawer.Screen name="Movimentacoes" component={MovimentacoesScreen} options={{ title: 'Entrada / Saída', drawerIcon: ({ color, size }) => <FontAwesome5 name="exchange-alt" size={size} color={color} /> }} />
+      <Drawer.Screen 
+  name="Relatorios" 
+  component={RelatoriosScreen} 
+  options={{ 
+    title: 'Relatórios',
+    drawerIcon: ({ color, size }) => <FontAwesome5 name="chart-pie" size={size} color={color} />
+  }} 
+/>
     </Drawer.Navigator>
   );
 }
 
 export default function AppNavigator() {
+  const { themeColors } = useTheme();
+  const [dbReady, setDbReady] = useState(false); // Estado para segurar a tela
+
+  // Executa a criação das tabelas antes de abrir o app
+  useEffect(() => {
+    async function setupDatabase() {
+      await initDB();
+      setDbReady(true);
+    }
+    setupDatabase();
+  }, []);
+
+  // Tela de carregamento enquanto o banco é criado
+  if (!dbReady) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: themeColors.background }}>
+        <ActivityIndicator size="large" color={themeColors.primary} />
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Main">
+      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Welcome">
+        <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="Main" component={DrawerNavigator} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: true, title: 'Cadastro' }} />
-        <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: true, title: 'Acesso Rápido', headerStyle: { backgroundColor: '#2563EB' }, headerTintColor: '#FFF' }} />
-        <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ headerShown: true, title: 'Finalizar Pedido', headerStyle: { backgroundColor: '#2563EB' }, headerTintColor: '#FFF' }} />
+        
+        <Stack.Screen 
+          name="CadastroProduto" 
+          component={CadastroProdutoScreen} 
+          options={{ 
+            headerShown: true, 
+            title: 'Gerenciar Produto',
+            headerStyle: { backgroundColor: themeColors.headerBg },
+            headerTintColor: themeColors.headerText
+          }} 
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

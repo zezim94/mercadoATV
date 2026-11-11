@@ -1,7 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { Appearance, useColorScheme } from 'react-native';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { auth, db } from '../config/firebase';
+import { useColorScheme } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const ThemeContext = createContext();
 
@@ -26,7 +25,7 @@ export const colors = {
     textPrimary: '#F8FAFC',
     textSecondary: '#94A3B8',
     border: '#334155',
-    primary: '#3B82F6', // Azul um pouco mais claro para contraste no escuro
+    primary: '#3B82F6', 
     danger: '#EF4444',
     success: '#10B981',
     warning: '#FBBF24',
@@ -36,27 +35,24 @@ export const colors = {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const systemTheme = useColorScheme(); // 'light' ou 'dark' do sistema
-  const [themePreference, setThemePreference] = useState('system'); // 'light', 'dark', 'system'
+  const systemTheme = useColorScheme(); 
+  const [themePreference, setThemePreference] = useState('system'); 
   const [currentTheme, setCurrentTheme] = useState(systemTheme || 'light');
 
-  // Buscar preferência do Firebase ao logar
+  // Buscar preferência da memória local do celular ao abrir o app
   useEffect(() => {
     const fetchTheme = async () => {
-      if (auth.currentUser) {
-        try {
-          const docRef = doc(db, 'users', auth.currentUser.uid);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists() && docSnap.data().themePreference) {
-            setThemePreference(docSnap.data().themePreference);
-          }
-        } catch (error) {
-          console.error("Erro ao buscar tema:", error);
+      try {
+        const savedTheme = await AsyncStorage.getItem('@theme_preference');
+        if (savedTheme) {
+          setThemePreference(savedTheme);
         }
+      } catch (error) {
+        console.error("Erro ao buscar tema na memória local:", error);
       }
     };
     fetchTheme();
-  }, [auth.currentUser]);
+  }, []);
 
   // Atualizar tema atual baseado na preferência ou sistema
   useEffect(() => {
@@ -67,16 +63,13 @@ export const ThemeProvider = ({ children }) => {
     }
   }, [themePreference, systemTheme]);
 
-  // Função para alterar e salvar no Firebase
+  // Função para alterar e salvar no armazenamento local
   const changeThemePreference = async (newPreference) => {
     setThemePreference(newPreference);
-    if (auth.currentUser) {
-      try {
-        const docRef = doc(db, 'users', auth.currentUser.uid);
-        await updateDoc(docRef, { themePreference: newPreference });
-      } catch (error) {
-        console.error("Erro ao salvar tema:", error);
-      }
+    try {
+      await AsyncStorage.setItem('@theme_preference', newPreference);
+    } catch (error) {
+      console.error("Erro ao salvar tema na memória local:", error);
     }
   };
 
